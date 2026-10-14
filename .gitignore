@@ -45,6 +45,11 @@ Thumbs.db
 Desktop.ini
 *.log
 
+# Banco local (SQLite) — dados de execução não são versionados
+*.db
+*.db-shm
+*.db-wal
+
 # Segredos — NUNCA commitar
 *.env
 appsettings.Development.json
