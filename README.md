@@ -91,3 +91,45 @@ Entregue:
 - documentação atualizada.
 
 O projeto deve compilar sem erros e ser entregue sem warnings para receber a pontuação integral de Qualidade de Código.
+
+## Implementação do grupo
+
+### Tecnologias e decisões
+
+- **ASP.NET Core 10** com controllers, **ASP.NET Core Identity** e **Entity Framework Core** com provider **SQLite** (arquivo `expensehub.db`, ignorado pelo git).
+- **Autenticação:** token bearer nativo do ASP.NET Core (`AddBearerToken`). O `POST /login` devolve `accessToken`, que deve ser enviado em `Authorization: Bearer <token>`. As roles ficam no token, por isso é preciso **autenticar de novo** após uma alteração de roles.
+- **Autorização em camadas:** `[Authorize(Roles = ...)]` nos controllers (role) e `ExpenseService` (escopo de leitura, ownership e estado). Nada que venha do cliente define proprietário, estado, ator ou horário.
+- **Regras de resposta:** 400 entrada inválida, 401 sem credencial, 403 sem permissão (inclusive tentar aprovar/pagar o próprio reembolso), 404 inexistente ou fora do escopo de leitura, 409 transição incompatível ou repetida (também usado quando duas requisições disputam o mesmo reembolso: o estado é um token de concorrência).
+- **Visibilidade (`ExpenseVisibility`):** um filtro único, traduzido para SQL, usado em listagem, detalhe e histórico. Employee vê os próprios, Approver os enviados, Finance os aprovados e pagos, Auditor todos. Roles acumuladas somam permissões; Admin sozinho não acessa reembolsos.
+- **Histórico:** reembolso, entrada de histórico e pagamento são gravados em um único `SaveChanges` (mesma transação).
+
+### Configuração e execução
+
+1. Instale o SDK do .NET 10 e a ferramenta de migrations (uma vez): `dotnet tool install --global dotnet-ef`.
+2. Configure o Admin inicial (nunca no código; use user-secrets):
+
+```shell
+cd sources/ExpenseHub.Api
+dotnet user-secrets set "Admin:Email" "admin@expensehub.local"
+dotnet user-secrets set "Admin:Password" "Troque#Esta1Senha"
+```
+
+   Alternativa: variáveis de ambiente `Admin__Email` e `Admin__Password`.
+3. Gere a migration inicial (apenas uma vez, e faça commit da pasta `Migrations`):
+
+```shell
+dotnet ef migrations add InitialCreate --project sources/ExpenseHub.Api
+```
+
+4. Execute: `dotnet run --project sources/ExpenseHub.Api/ExpenseHub.Api.csproj`. Na inicialização a aplicação aplica as migrations, cria as 5 roles, as categorias padrão e o Admin (de forma idempotente).
+5. Para recomeçar do zero, apague o arquivo `expensehub.db`.
+
+As requisições de exemplo estão em `sources/ExpenseHub.Api/ExpenseHub.Api.http`.
+
+### Testes
+
+```shell
+dotnet test ./sources/ExpenseHub.slnx
+```
+
+Os testes unitários usam repositório e relógio falsos (sem banco nem rede) e cobrem criação, validações, edição, envio, aprovação, reprovação, pagamento, visibilidade por perfil, histórico e regras de roles, com foco nos casos negativos de autorização.

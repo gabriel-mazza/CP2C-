@@ -1,9 +1,94 @@
 @ExpenseHub_Api_HostAddress = http://localhost:5245
+@token = cole-aqui-o-accessToken-do-login
+@expenseId = cole-aqui-o-id-do-reembolso
+@userId = cole-aqui-o-id-do-usuario
 
 GET {{ExpenseHub_Api_HostAddress}}/health
 Accept: application/json
 
 ###
 
-# Os endpoints do checkpoint estão definidos em docs/REQUISITOS.md.
-# Implemente e adicione aqui as requisições usadas para validar cada issue.
+# Cadastro (nunca aceita roles)
+POST {{ExpenseHub_Api_HostAddress}}/register
+Content-Type: application/json
+
+{ "email": "funcionario@exemplo.com", "password": "Senha#Forte1" }
+
+###
+
+# Login: devolve accessToken
+POST {{ExpenseHub_Api_HostAddress}}/login
+Content-Type: application/json
+
+{ "email": "funcionario@exemplo.com", "password": "Senha#Forte1" }
+
+###
+
+# Admin: listar usuários
+GET {{ExpenseHub_Api_HostAddress}}/api/admin/users
+Authorization: Bearer {{token}}
+
+###
+
+# Admin: definir roles (o usuário precisa autenticar de novo)
+PUT {{ExpenseHub_Api_HostAddress}}/api/admin/users/{{userId}}/roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "roles": ["Employee"] }
+
+###
+
+# Employee: criar rascunho
+POST {{ExpenseHub_Api_HostAddress}}/api/expenses
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "description": "Taxi até o cliente", "amount": 50.5, "expenseDate": "2026-10-10", "categoryId": 1 }
+
+###
+
+# Employee: editar rascunho
+PUT {{ExpenseHub_Api_HostAddress}}/api/expenses/{{expenseId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "description": "Taxi até o cliente (ida e volta)", "amount": 90, "expenseDate": "2026-10-10" }
+
+###
+
+GET {{ExpenseHub_Api_HostAddress}}/api/expenses
+Authorization: Bearer {{token}}
+
+###
+
+GET {{ExpenseHub_Api_HostAddress}}/api/expenses/{{expenseId}}
+Authorization: Bearer {{token}}
+
+###
+
+POST {{ExpenseHub_Api_HostAddress}}/api/expenses/{{expenseId}}/submit
+Authorization: Bearer {{token}}
+
+###
+
+POST {{ExpenseHub_Api_HostAddress}}/api/expenses/{{expenseId}}/approve
+Authorization: Bearer {{token}}
+
+###
+
+POST {{ExpenseHub_Api_HostAddress}}/api/expenses/{{expenseId}}/reject
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "justification": "Recibo ilegível, reenvie por favor" }
+
+###
+
+POST {{ExpenseHub_Api_HostAddress}}/api/expenses/{{expenseId}}/pay
+Authorization: Bearer {{token}}
+
+###
+
+GET {{ExpenseHub_Api_HostAddress}}/api/expenses/{{expenseId}}/history
+Authorization: Bearer {{token}}
