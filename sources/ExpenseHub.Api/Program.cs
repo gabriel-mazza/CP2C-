@@ -1,3 +1,5 @@
+using System;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using ExpenseHub.Api.Data;
 using ExpenseHub.Api.Services;
@@ -33,9 +35,14 @@ internal static class Program
             .AddBearerToken(BearerTokenDefaults.AuthenticationScheme);
         builder.Services.AddAuthorization();
 
-        builder.Services.AddControllers();
+        builder.Services
+            .AddControllers()
+            .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
         builder.Services.AddOpenApi();
 
+        builder.Services.AddSingleton(TimeProvider.System);
+        builder.Services.AddScoped<IExpenseRepository, ExpenseRepository>();
+        builder.Services.AddScoped<IExpenseService, ExpenseService>();
         builder.Services.AddScoped<IAccountService, AccountService>();
         builder.Services.AddScoped<IUserAdminService, UserAdminService>();
 
