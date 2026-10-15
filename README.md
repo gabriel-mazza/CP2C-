@@ -2,20 +2,19 @@
 
 Checkpoint de C# em grupos de até 3 pessoas para construção de uma Application Programming Interface (API) corporativa de reembolsos.
 
-O prazo de entrega é **13 de outubro de 2026**. O grupo deverá implementar autenticação, autorização, fluxo de aprovação e reprovação, pagamento simulado, histórico e testes unitários.
+O prazo de entrega é 13 de outubro de 2026. O grupo deverá implementar autenticação, autorização, fluxo de aprovação e reprovação, pagamento simulado, histórico e testes unitários.
 
 ## Criar seu repositório
 
 1. Clique em **Use this template**.
 2. Selecione **Create a new repository**.
-3. Crie um repositório **público** em uma das contas do grupo.
+3. Crie um repositório público em uma das contas do grupo.
 4. Adicione os demais integrantes como colaboradores.
 5. Clone o repositório.
 
 Não use fork. As issues permanecem neste repositório original como especificação comum da turma.
 
-Os commits serão utilizados para avaliar a participação. Todos os membros do grupo
-devem possuir mais de um commit no repositório.
+Os commits serão utilizados para avaliar a participação. Todos os membros do grupo devem possuir mais de um commit no repositório.
 
 ## Fluxo de trabalho
 
@@ -54,13 +53,13 @@ O endpoint inicial `GET /health` existe apenas para confirmar que a aplicação 
 
 ## Documentação
 
-- [Enunciado](docs/ENUNCIADO.md)
-- [Requisitos e contratos](docs/REQUISITOS.md)
-- [Rubrica](docs/RUBRICA.md)
-- [Matriz de autorização](docs/MATRIZ-AUTORIZACAO.md)
-- [Processo no GitHub](docs/PROCESSO-GITHUB.md)
-- [Uso de Inteligência Artificial](docs/USO-DE-IA.md)
-- [Regras do pipeline de qualidade](docs/code-quality-rules.md)
+- Enunciado
+- Requisitos e contratos
+- Rubrica
+- Matriz de autorização
+- Processo no GitHub
+- Uso de Inteligência Artificial
+- Regras do pipeline de qualidade
 
 ## Banco de dados
 
@@ -97,7 +96,7 @@ O projeto deve compilar sem erros e ser entregue sem warnings para receber a pon
 ### Tecnologias e decisões
 
 - **ASP.NET Core 10** com controllers, **ASP.NET Core Identity** e **Entity Framework Core** com provider **SQLite** (arquivo `expensehub.db`, ignorado pelo git).
-- **Autenticação:** token bearer nativo do ASP.NET Core (`AddBearerToken`). O `POST /login` devolve `accessToken`, que deve ser enviado em `Authorization: Bearer <token>`. As roles ficam no token, por isso é preciso **autenticar de novo** após uma alteração de roles.
+- **Autenticação:** token bearer nativo do ASP.NET Core (`AddBearerToken`). O `POST /login` devolve `accessToken`, que deve ser enviado em `Authorization: Bearer <token>`. As roles ficam no token, por isso é preciso autenticar de novo após uma alteração de roles.
 - **Autorização em camadas:** `[Authorize(Roles = ...)]` nos controllers (role) e `ExpenseService` (escopo de leitura, ownership e estado). Nada que venha do cliente define proprietário, estado, ator ou horário.
 - **Regras de resposta:** 400 entrada inválida, 401 sem credencial, 403 sem permissão (inclusive tentar aprovar/pagar o próprio reembolso), 404 inexistente ou fora do escopo de leitura, 409 transição incompatível ou repetida (também usado quando duas requisições disputam o mesmo reembolso: o estado é um token de concorrência).
 - **Visibilidade (`ExpenseVisibility`):** um filtro único, traduzido para SQL, usado em listagem, detalhe e histórico. Employee vê os próprios, Approver os enviados, Finance os aprovados e pagos, Auditor todos. Roles acumuladas somam permissões; Admin sozinho não acessa reembolsos.
@@ -106,22 +105,21 @@ O projeto deve compilar sem erros e ser entregue sem warnings para receber a pon
 ### Configuração e execução
 
 1. Instale o SDK do .NET 10 e a ferramenta de migrations (uma vez): `dotnet tool install --global dotnet-ef`.
+
 2. Configure o Admin inicial (nunca no código; use user-secrets):
 
 ```shell
-cd sources/ExpenseHub.Api
-dotnet user-secrets set "Admin:Email" "admin@expensehub.local"
-dotnet user-secrets set "Admin:Password" "Troque#Esta1Senha"
+   cd sources/ExpenseHub.Api
+   dotnet user-secrets set "Admin:Email" "admin@expensehub.local"
+   dotnet user-secrets set "Admin:Password" "<defina-uma-senha-forte>"
 ```
 
    Alternativa: variáveis de ambiente `Admin__Email` e `Admin__Password`.
-3. Gere a migration inicial (apenas uma vez, e faça commit da pasta `Migrations`):
 
-```shell
-dotnet ef migrations add InitialCreate --project sources/ExpenseHub.Api
-```
+3. A migration inicial já está versionada na pasta `Migrations`, então não é preciso gerá-la de novo: ela é aplicada automaticamente na inicialização. Para criar uma nova migration após alterar o modelo: `dotnet ef migrations add NomeDaMigration --project sources/ExpenseHub.Api`.
 
 4. Execute: `dotnet run --project sources/ExpenseHub.Api/ExpenseHub.Api.csproj`. Na inicialização a aplicação aplica as migrations, cria as 5 roles, as categorias padrão e o Admin (de forma idempotente).
+
 5. Para recomeçar do zero, apague o arquivo `expensehub.db`.
 
 As requisições de exemplo estão em `sources/ExpenseHub.Api/ExpenseHub.Api.http`.
